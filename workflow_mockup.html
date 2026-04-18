@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: #2C2C2A;
+  padding: 0.5rem;
+  background: #F5F5F5;
+  margin: 0;
+}
+
+.container {
+  max-width: 100%;
+  margin: 0;
+  background: white;
+  border-radius: 8px;
+  padding: 1rem 0.75rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.header {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #E5E5E5;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header h1 {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 0;
+}
+
+.header-logo {
+  height: 40px;
+  width: auto;
+}
+
+.project-info {
+  font-size: 14px;
+  color: #666;
+}
+
+.project-selector {
+  margin-bottom: 1.5rem;
+}
+
+.search-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.search-row select {
+  flex: 1;
+  padding: 10px 12px;
+  font-size: 15px;
+  border: 1px solid #E5E5E5;
+  border-radius: 8px;
+  background: white;
+}
+
+.project-selector > select {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 15px;
+  border: 1px solid #E5E5E5;
+  border-radius: 8px;
+  background: white;
+  margin-top: 8px;
+}
+
+.timeline {
+  position: relative;
+  padding-left: 28px;
+}
+
+.timeline-line {
+  position: absolute;
+  left: 8px;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: #E5E5E5;
+  border-radius: 2px;
+}
+
+.timeline-progress {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  background: #97C459;
+  transition: height 0.3s;
+}
+
+.phase {
+  position: relative;
+  margin-bottom: 0.25rem;
+  cursor: pointer;
+  padding: 0.875rem 1rem;
+  border-radius: 12px;
+  transition: all 0.2s;
+  background: white;
+  border: 2px solid #D3D1C7;
+}
+
+.phase:hover {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.phase.completed {
+  border-color: #97C459;
+}
+
+.phase.active {
+  border-color: #EF9F27;
+  background: #FFFBF5;
+}
+
+.phase-dot {
+  position: absolute;
+  left: -26.5px;
+  top: 24px;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  border: 3px solid white;
+  background: #E5E5E5;
+  box-shadow: 0 0 0 2px #E5E5E5;
+  transition: all 0.2s;
+  z-index: 2;
+}
+
+.phase.completed .phase-dot {
+  background: #97C459;
+  box-shadow: 0 0 0 2px #97C459;
+}
+
+.phase.active .phase-dot {
+  width: 19px;
+  height: 19px;
+  left: -28.5px;
+  top: 22px;
+  background: #97C459;
+  border: 3px solid white;
+  box-shadow: 0 0 0 3px #97C459;
+}
+
+.phase-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: #888780;
+}
+
+.phase-title-text {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+.phase-title-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.phase.completed .phase-title {
+  color: #639922;
+}
+
+.phase.active .phase-title {
+  color: #BA7517;
+}
+
+.phase-time {
+  font-size: 16px;
+  font-weight: 600;
+  color: #888;
+  flex-shrink: 0;
+  min-width: 60px;
+  text-align: right;
+}
+
+.phase-time.warning {
+  color: #E24B4A;
+}
+
+.phase-meta {
+  font-size: 13px;
+  color: #888;
+  margin-bottom: 8px;
+}
+
+.phase-badge {
+  display: inline-block;
+  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: 6px;
+  margin-left: 10px;
+  background: #E8F5E1;
+  color: #639922;
+  font-weight: 500;
+}
+
+.phase.active .phase-badge {
+  background: #97C459;
+  color: white;
+}
+
+.detail-panel {
+  display: none;
+  margin-top: 1rem;
+  padding: 1.5rem;
+  background: #F9F9F9;
+  border-radius: 8px;
+  border-left: 3px solid #97C459;
+}
+
+.detail-panel.active {
+  display: block;
+}
+
+.detail-section {
+  margin-bottom: 1.5rem;
+}
+
+.detail-section:last-child {
+  margin-bottom: 0;
+}
+
+.detail-section h3 {
+  font-size: 12px;
+  font-weight: 600;
+  color: #888;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 8px;
+  font-size: 14px;
+  margin-bottom: 1rem;
+}
+
+.info-label {
+  color: #888;
+}
+
+.info-value {
+  font-weight: 500;
+}
+
+.checklist-item {
+  display: flex;
+  align-items: start;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid #E5E5E5;
+  font-size: 14px;
+}
+
+.checklist-item:last-child {
+  border-bottom: none;
+}
+
+.checkbox {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #97C459;
+  border-radius: 3px;
+  flex-shrink: 0;
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.checkbox.checked {
+  background: #97C459;
+}
+
+.checkbox.checked::after {
+  content: '✓';
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.alert {
+  background: #FEF2F2;
+  border-left: 3px solid #E24B4A;
+  padding: 12px 16px;
+  margin-bottom: 1rem;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #991B1B;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>Workflow projektu</h1>
+    <img src="logo.svg" alt="Easy Homes" class="header-logo">
+  </div>
+  
+  <div class="project-selector">
+    <div class="search-row">
+      <select id="searchType" onchange="updateSearchOptions()">
+        <option value="">Hledej podle</option>
+        <option value="obchodnik">Obchodníka</option>
+        <option value="projektant">Projektanta</option>
+        <option value="stavbyvedouci">Stavbyvedoucího</option>
+        <option value="cislo">Čísla zakázky</option>
+      </select>
+      
+      <select id="searchValue" disabled>
+        <option value="">Vyber položku</option>
+      </select>
+    </div>
+    
+    <select id="projectSelect" onchange="switchProject()">
+      <option value="">Vyber zakázku ze seznamu</option>
+      <option value="0">RD Benešov – Procházkovi (Matěj Končal)</option>
+      <option value="1">RD Karlík – Novákovi (Jan Beer)</option>
+      <option value="2">Chata Lipno – Svoboda (Michal Votava)</option>
+      <option value="3">Bytovka Vinohrady – REMAX (Jan Beer)</option>
+      <option value="4">RD Říčany – Dvořákovi (Michal Votava)</option>
+    </select>
+  </div>
+  
+  <div class="timeline" id="timeline">
+    <!-- Rendered by JS -->
+  </div>
+</div>
+
+<script>
+const searchOptions = {
+  obchodnik: ['Jan Beer', 'Michal Votava', 'Matěj Končal'],
+  projektant: ['Kateřina Radová', 'Ing. Anna Šašková', 'Tomáš Dostál', 'Nicole Houšková', 'Vitalii Shkirta'],
+  stavbyvedouci: ['Pavel Horák', 'Jiří Malý', 'Stanislav Veselý', 'Roman Kučera', 'Miroslav Němec'],
+  cislo: ['EH-2024-0147', 'EH-2024-0198', 'EH-2025-0023', 'EH-2025-0067', 'EH-2025-0089']
+};
+
+const projects = [
+  {
+    name: 'RD Benešov – Procházkovi (Matěj Končal)',
+    currentPhase: 3,
+    alert: 'Projekt ve fázi "Projekce běží" už 12 dní bez aktualizace od projektanta',
+    actualDays: 12
+  },
+  {
+    name: 'RD Karlík – Novákovi (Jan Beer)',
+    currentPhase: 4,
+    alert: null,
+    actualDays: 45
+  },
+  {
+    name: 'Chata Lipno – Svoboda (Michal Votava)',
+    currentPhase: 5,
+    alert: null,
+    actualDays: 3
+  },
+  {
+    name: 'Bytovka Vinohrady – REMAX (Jan Beer)',
+    currentPhase: 6,
+    alert: null,
+    actualDays: 5
+  },
+  {
+    name: 'RD Říčany – Dvořákovi (Michal Votava)',
+    currentPhase: 1,
+    alert: null,
+    actualDays: 8
+  }
+];
+
+const phases = [
+  {
+    title: 'Podpis smlouvy na projekt',
+    limit: 3,
+    info: { 'Odpovědný': 'Obchodník', 'Limit pro splnění': '3 dny', 'Skutečná doba': 'N/A' },
+    checklist: [
+      { text: 'Předání zakázky na recepci', done: true },
+      { text: 'Zpracování podkladů', done: true },
+      { text: 'Zápis do tabulky', done: true }
+    ]
+  },
+  {
+    title: 'Studie a nabídka',
+    limit: 14,
+    info: { 'Odpovědný': 'Obchodník + Architekt', 'Limit pro splnění': '14 dní', 'Skutečná doba': 'N/A' },
+    checklist: [
+      { text: 'Předání architektovi', done: false },
+      { text: 'Příprava cenové nabídky', done: false },
+      { text: 'Prezentace klientovi', done: false }
+    ]
+  },
+  {
+    title: 'Smlouva na projekt',
+    limit: 7,
+    info: { 'Odpovědný': 'Obchodník', 'Limit pro splnění': '7 dní', 'Skutečná doba': 'N/A' },
+    checklist: [
+      { text: 'Příprava smlouvy', done: false },
+      { text: 'Sběr podkladů od klienta', done: false },
+      { text: 'Zaslání k podpisu', done: false }
+    ]
+  },
+  {
+    title: 'Projekce běží',
+    limit: 75,
+    info: { 'Odpovědný': 'Projektant', 'Limit pro splnění': '75 dní', 'Skutečná doba': 'N/A' },
+    checklist: [
+      { text: 'PENB vypracován', done: false },
+      { text: 'Stavební deník', done: false },
+      { text: 'Dokumentace pro SP', done: false }
+    ]
+  },
+  {
+    title: 'Čekání na stavební povolení',
+    limit: 90,
+    info: { 'Odpovědný': 'Projektant + Obchodník', 'Limit pro splnění': '90 dní (orientační)', 'Skutečná doba': 'N/A' },
+    checklist: [
+      { text: 'Podána žádost o SP', done: false },
+      { text: 'Kontakt s klientem o stavu', done: false },
+      { text: 'Hlídání termínu', done: false }
+    ]
+  },
+  {
+    title: 'Aktualizace rozpočtu pro STV',
+    limit: 14,
+    info: { 'Odpovědný': 'Obchodník', 'Limit pro splnění': '14 dní', 'Skutečná doba': 'N/A' },
+    checklist: [
+      { text: 'Vyžádat aktuální ceny', done: false },
+      { text: 'Nacenit změny od klienta', done: false },
+      { text: 'Aktualizovat rozpočet', done: false }
+    ]
+  },
+  {
+    title: 'Smlouva na stavbu',
+    limit: 7,
+    info: { 'Odpovědný': 'Obchodník', 'Limit pro splnění': '7 dní', 'Skutečná doba': 'N/A' },
+    checklist: [
+      { text: 'Příprava STV', done: false },
+      { text: 'Podpis smlouvy', done: false },
+      { text: 'Vystavení faktury', done: false }
+    ]
+  },
+  {
+    title: 'Předání do výroby',
+    limit: 3,
+    info: { 'Odpovědný': 'Obchodník → Výroba', 'Limit pro splnění': '3 dny', 'Skutečná doba': 'N/A' },
+    checklist: [
+      { text: 'Předání dokumentace', done: false },
+      { text: 'Nahrání podkladů', done: false },
+      { text: 'Předání kontaktu výrobě', done: false }
+    ]
+  }
+];
+
+let currentProjectIndex = 0;
+let openPhaseIndex = null;
+
+function updateSearchOptions() {
+  const searchType = document.getElementById('searchType').value;
+  const searchValue = document.getElementById('searchValue');
+  
+  searchValue.innerHTML = '';
+  
+  if (searchType && searchOptions[searchType]) {
+    searchValue.disabled = false;
+    searchOptions[searchType].forEach((option, index) => {
+      const opt = document.createElement('option');
+      opt.value = option;
+      opt.textContent = option;
+      if (index === 0) opt.selected = true; // První položka automaticky vybraná
+      searchValue.appendChild(opt);
+    });
+  } else {
+    searchValue.disabled = true;
+    searchValue.innerHTML = '<option value="">Vyber položku</option>';
+  }
+}
+
+function renderTimeline() {
+  const project = projects[currentProjectIndex];
+  const currentPhase = project.currentPhase;
+  const progressPercent = (currentPhase / (phases.length - 1)) * 100;
+  
+  let html = `
+    <div class="timeline-line">
+      <div class="timeline-progress" style="height: ${progressPercent}%;"></div>
+    </div>
+  `;
+  
+  phases.forEach((phase, idx) => {
+    const isCompleted = idx < currentPhase;
+    const isActive = idx === currentPhase;
+    const isOpen = openPhaseIndex === idx;
+    const hasAlert = isActive && project.alert;
+    
+    // Pro aktivní fázi použij actualDays z projektu, jinak N/A
+    const phaseInfo = {...phase.info};
+    if (isActive) {
+      phaseInfo['Skutečná doba'] = `${project.actualDays} dní`;
+    }
+    
+    // Zobrazení času u všech fází
+    let timeDisplay = '';
+    if (phase.limit) {
+      if (isActive) {
+        const isOverdue = project.actualDays > phase.limit;
+        timeDisplay = `<span class="phase-time ${isOverdue ? 'warning' : ''}">${phase.limit}/${project.actualDays}</span>`;
+      } else if (isCompleted) {
+        // Pro hotové úkoly zobraz náhodnou skutečnou dobu (v reálu by se načítala z dat)
+        const completedDays = Math.floor(phase.limit * 0.7); // simulace - 70% limitu
+        timeDisplay = `<span class="phase-time">${phase.limit}/${completedDays}</span>`;
+      } else {
+        // Pro nespuštěné úkoly zobraz jen limit
+        timeDisplay = `<span class="phase-time">${phase.limit}/–</span>`;
+      }
+    }
+    
+    const checklistHtml = phase.checklist.map(item => {
+      // Pro hotové fáze jsou všechny checklisty done
+      const isDone = isCompleted ? true : item.done;
+      return `
+        <div class="checklist-item">
+          <div class="checkbox ${isDone ? 'checked' : ''}"></div>
+          <div>${item.text}</div>
+        </div>
+      `;
+    }).join('');
+    
+    const infoHtml = Object.entries(phaseInfo).map(([key, val]) => `
+      <div class="info-label">${key}:</div>
+      <div class="info-value">${val}</div>
+    `).join('');
+    
+    html += `
+      <div class="phase ${isCompleted ? 'completed' : ''} ${isActive ? 'active' : ''}" 
+           onclick="togglePhase(${idx})">
+        <div class="phase-dot"></div>
+        <div style="flex: 1;">
+          <div class="phase-title">
+            <div class="phase-title-text">
+              <span>${phase.title}</span>
+            </div>
+            <div class="phase-title-right">
+              ${timeDisplay}
+            </div>
+          </div>
+          </div>
+          </div>
+          
+          <div class="detail-panel ${isOpen ? 'active' : ''}">
+            ${hasAlert ? `<div class="alert">⚠️ ${project.alert}</div>` : ''}
+            
+            <div class="detail-section">
+              <div class="info-grid">${infoHtml}</div>
+            </div>
+            
+            <div class="detail-section">
+              <h3>Checklist</h3>
+              ${checklistHtml}
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+  
+  document.getElementById('timeline').innerHTML = html;
+}
+
+function togglePhase(idx) {
+  openPhaseIndex = openPhaseIndex === idx ? null : idx;
+  renderTimeline();
+}
+
+function switchProject() {
+  const selectedValue = document.getElementById('projectSelect').value;
+  if (selectedValue !== '') {
+    currentProjectIndex = parseInt(selectedValue);
+    openPhaseIndex = null;
+    renderTimeline();
+  }
+}
+
+function switchProject() {
+  currentProjectIndex = parseInt(document.getElementById('projectSelect').value);
+  openPhaseIndex = null;
+  renderTimeline();
+}
+
+renderTimeline();
+</script>
+
+</body>
+</html>
