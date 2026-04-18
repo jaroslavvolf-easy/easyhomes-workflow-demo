@@ -149,9 +149,9 @@ body {
   height: 19px;
   left: -28.5px;
   top: 22px;
-  background: #97C459;
+  background: #FF8C00;
   border: 3px solid white;
-  box-shadow: 0 0 0 3px #97C459;
+  box-shadow: 0 0 0 3px #FF8C00;
 }
 
 .phase-title {
@@ -292,6 +292,12 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.checkbox:hover {
+  background: rgba(151, 196, 89, 0.1);
 }
 
 .checkbox.checked {
@@ -366,31 +372,26 @@ const projects = [
   {
     name: 'RD Benešov – Procházkovi (Matěj Končal)',
     currentPhase: 3,
-    alert: 'Projekt ve fázi "Projekce běží" už 12 dní bez aktualizace od projektanta',
     actualDays: 12
   },
   {
     name: 'RD Karlík – Novákovi (Jan Beer)',
     currentPhase: 4,
-    alert: null,
     actualDays: 45
   },
   {
     name: 'Chata Lipno – Svoboda (Michal Votava)',
     currentPhase: 5,
-    alert: null,
     actualDays: 3
   },
   {
     name: 'Bytovka Vinohrady – REMAX (Jan Beer)',
     currentPhase: 6,
-    alert: null,
     actualDays: 5
   },
   {
     name: 'RD Říčany – Dvořákovi (Michal Votava)',
     currentPhase: 1,
-    alert: null,
     actualDays: 8
   }
 ];
@@ -517,7 +518,6 @@ function renderTimeline() {
     const isCompleted = idx < currentPhase;
     const isActive = idx === currentPhase;
     const isOpen = openPhaseIndex === idx;
-    const hasAlert = isActive && project.alert;
     
     // Pro aktivní fázi použij actualDays z projektu, jinak N/A
     const phaseInfo = {...phase.info};
@@ -541,12 +541,12 @@ function renderTimeline() {
       }
     }
     
-    const checklistHtml = phase.checklist.map(item => {
+    const checklistHtml = phase.checklist.map((item, itemIdx) => {
       // Pro hotové fáze jsou všechny checklisty done
       const isDone = isCompleted ? true : item.done;
       return `
         <div class="checklist-item">
-          <div class="checkbox ${isDone ? 'checked' : ''}"></div>
+          <div class="checkbox ${isDone ? 'checked' : ''}" onclick="toggleCheckbox(event, ${idx}, ${itemIdx})"></div>
           <div>${item.text}</div>
         </div>
       `;
@@ -570,12 +570,8 @@ function renderTimeline() {
               ${timeDisplay}
             </div>
           </div>
-          </div>
-          </div>
           
           <div class="detail-panel ${isOpen ? 'active' : ''}">
-            ${hasAlert ? `<div class="alert">⚠️ ${project.alert}</div>` : ''}
-            
             <div class="detail-section">
               <div class="info-grid">${infoHtml}</div>
             </div>
@@ -595,6 +591,52 @@ function renderTimeline() {
 
 function togglePhase(idx) {
   openPhaseIndex = openPhaseIndex === idx ? null : idx;
+  renderTimeline();
+}
+
+function toggleCheckbox(event, phaseIdx, itemIdx) {
+  event.stopPropagation(); // Zabráníme zavření detailu
+  
+  const phase = phases[phaseIdx];
+  const project = projects[currentProjectIndex];
+  
+  // Povolit klikání jen na aktivní fázi nebo předchozí hotové fáze
+  if (phaseIdx > project.currentPhase) {
+    return;
+  }
+  
+  // Toggle checkbox
+  phase.checklist[itemIdx].done = !phase.checklist[itemIdx].done;
+  
+  // Zkontroluj jestli jsou všechny done v této fázi
+  const allDone = phase.checklist.every(item => item.done);
+  const anyDone = phase.checklist.some(item => item.done);
+  
+  // POSUN VPŘED: Pokud jsou všechny hotové a je to aktivní fáze, posuň na další
+  if (allDone && phaseIdx === project.currentPhase && phaseIdx < phases.length - 1) {
+    // Reset checkboxů na další fázi
+    phases[phaseIdx + 1].checklist.forEach(item => item.done = false);
+    
+    // Posuň projekt na další fázi
+    project.currentPhase = phaseIdx + 1;
+    project.actualDays = 0;
+    
+    // Zavři detail
+    openPhaseIndex = null;
+  }
+  
+  // POSUN ZPĚT: Pokud odškrtneme checkbox v hotové fázi a následující fáze nemá nic zaškrtnuté
+  if (!allDone && phaseIdx < project.currentPhase) {
+    // Zkontroluj jestli následující fáze nemá žádné zaškrtnuté checkboxy
+    const nextPhaseHasChecked = phases[project.currentPhase].checklist.some(item => item.done);
+    
+    if (!nextPhaseHasChecked) {
+      // Vrať se na tuto fázi
+      project.currentPhase = phaseIdx;
+      project.actualDays = 0;
+    }
+  }
+  
   renderTimeline();
 }
 
